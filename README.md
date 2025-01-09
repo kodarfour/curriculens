@@ -1,4 +1,4 @@
-# **<p style="text-align:center;">CurricuLens ![CurricuLens Logo](https://github.com/kodarfour/curriculens/blob/main/images/curriculens.ico)<br/>The UVA Course Schedule Optimization Website</p>**
+# **CurricuLens ![CurricuLens Logo](https://github.com/kodarfour/curriculens/blob/main/images/curriculens.ico)<br/>The UVA Course Schedule Optimization Website**
 
 A web application that helps UVA students optimize their course schedules for upcoming semesters by parsing existing enrolled schedules, filtering out previously taken courses, and allowing users to prioritize difficulty, course attributes, and preferred time slots.
 
@@ -22,7 +22,7 @@ A web application that helps UVA students optimize their course schedules for up
   - Suggesting a schedule that maximizes convenience and meets user criteria.
 
 - **Export Schedule as `.ics`**  
-  The generated schedule can be exported as an `.ics` file to be imported into any calendar application.
+  The generated schedule can be exported as an `.ics` file to be imported into any calendar application. Class commute durations will also proividee for the top schedule reccomendations (powered by Google Maps API).
 
 ---
 
