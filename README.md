@@ -26,22 +26,23 @@ A web application that helps UVA students optimize their course schedules for up
 
 ---
 
-## **Technology Stack**
+## **Technology Stack (WIP)**
 
 ### **Backend**
 - **Language**: Go
-- **Framework**: Gin for REST APIs
+- **Framework**: Gin or Echo for REST APIs (TBD)
 - **Microservices**: Each core function is implemented as an independent microservice.
-- **Database**: PostgreSQL (hosted on Google Cloud SQL)
-- **Deployment**: Google Cloud Run
+- **Database**: PostgreSQL (hosted on Google Cloud SQL, TBD)
+- **Deployment**: Google Cloud Run (TBD)
 
 ### **Frontend**
-- **Framework**: React
-- **Styling**: Tailwind CSS
-- **Deployment**: Firebase Hosting
+- **Framework**: React (TBD, possibly BootStrap)
+- **Styling**: Tailwind CSS (TBD)
+- **Deployment**: Firebase Hosting (TBD)
 
 ### **Data Collection**
 - **Web Scraping**: Python scripts using `requests` and `BeautifulSoup`
 - **Sources**:
   - SIS API (for course data)
   - TheCourseForum (for difficulty ratings and grade distributions)
+  - Google Maps API (for class commute times)
