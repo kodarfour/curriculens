@@ -11,7 +11,7 @@ A web application that helps UVA students optimize their course schedules for up
 
 - **Customizable Preferences**  
   Students can set preferences for:
-  - Maximum course difficulty (based on historical data from TheCourseForum).
+  - Maximum/Minimum course difficulty (based on historical data from TheCourseForum).
   - Course attributes (e.g., Writing Requirement, Science & Technology).
   - Time constraints (e.g., avoid early morning classes).
 
