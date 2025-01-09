@@ -43,6 +43,6 @@ A web application that helps UVA students optimize their course schedules for up
 ### **Data Collection**
 - **Web Scraping**: Python scripts using `requests` and `BeautifulSoup`
 - **Sources**:
-  - SIS API (for course data)
-  - TheCourseForum (for difficulty ratings and grade distributions)
+  - [SIS API](https://s23.cs3240.org/sis-api.html) (for course data)
+  - [TheCourseForum](https://thecourseforum.com/browse/) (for difficulty ratings and grade distributions)
   - Google Maps API (for class commute times)
