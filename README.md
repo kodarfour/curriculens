@@ -17,7 +17,7 @@ A web application that helps UVA students optimize their course schedules for up
 
 - **Optimized Schedule Generation**  
   The backend generates an optimized schedule by:
-  - Querying a database of UVA courses (scraped from Lou’s List and TheCourseForum).
+  - Querying a database of UVA courses (scraped from TheCourseForum and UVA's SIS API).
   - Applying user-defined preferences to filter out unwanted courses.
   - Suggesting a schedule that maximizes convenience and meets user criteria.
 
@@ -43,5 +43,5 @@ A web application that helps UVA students optimize their course schedules for up
 ### **Data Collection**
 - **Web Scraping**: Python scripts using `requests` and `BeautifulSoup`
 - **Sources**:
-  - Lou’s List (for course data)
+  - SIS API (for course data)
   - TheCourseForum (for difficulty ratings and grade distributions)
