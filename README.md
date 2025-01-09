@@ -1,4 +1,4 @@
-# **<p style="text-align:center;">CurricuLens ![CurricuLens Logo](https://github.com/kodarfour/curriculens/blob/main/images/curriculens.ico)<br />UVA Course Schedule Optimization Website</p>**
+# **<p style="text-align:center;">CurricuLens ![CurricuLens Logo](https://github.com/kodarfour/curriculens/blob/main/images/curriculens.ico)<br/>The UVA Course Schedule Optimization Website</p>**
 
 A web application that helps UVA students optimize their course schedules for upcoming semesters by parsing existing enrolled schedules, filtering out previously taken courses, and allowing users to prioritize difficulty, course attributes, and preferred time slots.
 
