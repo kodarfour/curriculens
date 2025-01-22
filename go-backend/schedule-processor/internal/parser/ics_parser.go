@@ -30,7 +30,7 @@ func ParseICS(filePath string) ([]Course, error) {
 
 	// Iterate through events
 	for _, event := range calendar.Events() {
-		// Extract the SUMMARY field
+		// Access SUMMARY field information
 		summaryProperty := event.GetProperty(ics.ComponentPropertySummary)
 		summary := ""
 		if summaryProperty != nil {
@@ -40,7 +40,7 @@ func ParseICS(filePath string) ([]Course, error) {
 			continue
 		}
 
-		// Parse subject and course number from SUMMARY
+		// Parse subject and course number from SUMMARY field
 		parts := strings.Fields(summary)
 		if len(parts) != 2 {
 			fmt.Printf("Invalid SUMMARY format: %s\n", summary)
@@ -54,7 +54,6 @@ func ParseICS(filePath string) ([]Course, error) {
 			continue
 		}
 
-		// Create the course struct and append to the list
 		CurrentCourse := Course{Subject: subject, CourseNumber: courseNumber}
 		TakenCourses = append(TakenCourses, CurrentCourse)
 
