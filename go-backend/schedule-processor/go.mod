@@ -1,4 +1,4 @@
-module schedule-processor
+module go-backend/schedule-processor
 
 go 1.21.0
 
