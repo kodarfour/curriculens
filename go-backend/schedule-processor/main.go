@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	filePath := "internal/parser/ics_files/2024_Fall_calendar.ics" 
+	filePath := "/app/2024_Spring_calendar.ics" //inside docker container
 
 	takenCourses, err := parser.ParseICS(filePath)
 	if err != nil {
