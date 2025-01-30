@@ -21,6 +21,12 @@ def get_recent_terms():
     
     return terms
 
+def get_mnemonics(term):
+    url = "https://sisuva.admin.virginia.edu/psc/ihprd/UVSS/SA/s/WEBLIB_HCX_CM.H_CLASS_SEARCH.FieldFormula.IScript_ClassSearchOptions?institution=UVA01&term=" + term
+    response = requests.get(url)
+    course_mnemonics = [subject["subject"] for subject in response.json()["subjects"]]
+    return course_mnemonics
+
 def get_courses():
     base_url = 'https://sisuva.admin.virginia.edu/psc/ihprd/UVSS/SA/s/WEBLIB_HCX_CM.H_CLASS_SEARCH.FieldFormula.IScript_ClassSearch?institution=UVA01'
     course = ('CS','4991') #example coures for now to test
@@ -32,4 +38,7 @@ def get_courses():
 # response = get_courses()
 # print(response.json())
 
-print(get_recent_terms())
+#print(get_recent_terms())
+
+terms = get_recent_terms()
+print(get_mnemonics(terms[0]))
