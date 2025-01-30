@@ -1,11 +1,11 @@
 import requests
-import datetime
+from datetime import datetime
 
 import psycopg
 from psycopg.types.json import Jsonb
 
 def get_recent_terms():
-    now = datetime.datetime.now()
+    now = datetime.now()
     month = int(now.strftime("%m"))
     day = int(now.strftime("%d")) # in case we need it
     year = int(now.strftime("%y"))
@@ -31,6 +31,15 @@ def term_to_semester_translator(term):
         sem = "Spring"
     return sem + " 20" + term[1:3]
 
+def process_time(time):
+    if not time:
+        return None
+    try:
+        return datetime.strptime(time, "%H.%M.%S.%f").strftime("%H:%M:%S")
+    except ValueError as e:
+        print(f"Time conversion error: {e} for input {time}")
+        return None
+
 def get_mnemonics(term):
     url = "https://sisuva.admin.virginia.edu/psc/ihprd/UVSS/SA/s/WEBLIB_HCX_CM.H_CLASS_SEARCH.FieldFormula.IScript_ClassSearchOptions?institution=UVA01&term=" + term
     response = requests.get(url)
@@ -40,7 +49,16 @@ def get_mnemonics(term):
 def get_courses(term, subject, page): # specific term, subject, and page
     base_url = "https://sisuva.admin.virginia.edu/psc/ihprd/UVSS/SA/s/WEBLIB_HCX_CM.H_CLASS_SEARCH.FieldFormula.IScript_ClassSearch?institution=UVA01"
     response = requests.get(base_url + '&term=' + term + '&subject=' + subject + '&page=' + page)
-    return response.json()
+    if response.status_code != 200:
+        print(f"Failed to fetch courses for {subject} {term}, page {page}")
+        return {"pageCount": 0, "classes": []}  # Prevent NoneType errors
+
+    try:
+        data = response.json()
+        return data
+    except Exception as e:
+        print(f"JSON parsing error: {e}")
+        return {"pageCount": 0, "classes": []}
 
 def get_course_data(r, semester):
     course_data = {
@@ -49,15 +67,15 @@ def get_course_data(r, semester):
         "course_number": r["catalog_nbr"],
         "credits": int(r["units"]),
         "instruction_mode": r["instruction_mode_descr"],
-        "location": r["meetings"][0]["facility_descr"],
-        "days": r["meetings"][0]["days"],
-        "start_time": r["meetings"][0]["start_time"],
-        "end_time": r["meetings"][0]["end_time"],
+        "location": r["meetings"][0]["facility_descr"] if r.get("meetings") else None,
+        "days": r["meetings"][0]["days"] if r.get("meetings") else None,
+        "start_time": process_time(r["meetings"][0]["start_time"]) if r.get("meetings") else None,
+        "end_time": process_time(r["meetings"][0]["end_time"]) if r.get("meetings") else None,
         "section": r["class_section"],
         "professors": [instructor["name"] for instructor in r["instructors"]],
         "semester": semester,
-        "attributes": r["crse_attr_value"],
-        "type": "Lecture",
+        "attributes": r["crse_attr_value"] if r.get("crse_attr_value") else None,
+        "type": r["component"],
     }
     return course_data
 
@@ -69,7 +87,7 @@ DB_CONFIG = {
     "user": "myuser",
     "password": "mypassword",
     "host": "localhost",
-    "port": 4564,
+    "port": 5432,
 }
 
 # Base query to create the table
@@ -86,7 +104,7 @@ CREATE TABLE IF NOT EXISTS courses (
     start_time TIME,
     end_time TIME,
     section VARCHAR(50),
-    professor TEXT[],
+    professors TEXT[],
     semester VARCHAR(50),
     attributes VARCHAR(50),
     type VARCHAR(50),
@@ -98,11 +116,11 @@ CREATE TABLE IF NOT EXISTS courses (
 INSERT_SQL = """
 INSERT INTO courses (
     department, subject, course_number, credits, instruction_mode,
-    location, days, start_time, end_time, section, professor,
+    location, days, start_time, end_time, section, professors,
     semester, attributes, type
 ) VALUES (
     %(department)s, %(subject)s, %(course_number)s, %(credits)s, %(instruction_mode)s,
-    %(location)s, %(days)s, %(start_time)s, %(end_time)s, %(section)s, %(professor)s,
+    %(location)s, %(days)s, %(start_time)s, %(end_time)s, %(section)s, %(professors)s,
     %(semester)s, %(attributes)s, %(type)s
 );
 """
@@ -120,21 +138,23 @@ try:
             for term in recent_terms:
                 semester = term_to_semester_translator(term)
                 for subject in course_mmnemonics:
-                    r = get_courses(term, subject, 1)
+                    r = get_courses(term, subject, str(1))
                     page_count = r["pageCount"]
                     for course in r["classes"]:
                         course_data = get_course_data(course, semester)
                         cursor.execute(INSERT_SQL, course_data)
+                        conn.commit()
                         print(semester, subject, "page 1 data inserted successfully into the 'courses' table!")
 
                     if page_count == 1:
                         continue
                     for page in range(2, page_count+1):
-                        response = get_courses(term, subject, page)
+                        response = get_courses(term, subject, str(page))
                         for course in r["classes"]:
                             course_data = get_course_data(course, semester)
                             cursor.execute(INSERT_SQL, course_data)
                             print(semester, subject, "page", page, "data inserted successfully into the 'courses' table!")
+                        conn.commit()
 
 
 
