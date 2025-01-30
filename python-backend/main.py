@@ -1,5 +1,4 @@
 import requests
-import json
 import datetime
 
 def get_recent_terms():
@@ -17,7 +16,7 @@ def get_recent_terms():
 
     terms = []
     for i in range(len(seasons)):
-        terms.append("1" + str(years[i]) + str(seasons[i])) # terms formula is “1” + [2 digit year] + [2 for Spring, 8 for Fall
+        terms.append("1" + str(years[i]) + str(seasons[i])) # terms formula is “1” + [2 digit year] + [2 for Spring, 8 for Fall]
     
     return terms
 
@@ -27,18 +26,7 @@ def get_mnemonics(term):
     course_mnemonics = [subject["subject"] for subject in response.json()["subjects"]]
     return course_mnemonics
 
-def get_courses():
+def get_courses(term, subject, page): # specific term, subject, and page
     base_url = 'https://sisuva.admin.virginia.edu/psc/ihprd/UVSS/SA/s/WEBLIB_HCX_CM.H_CLASS_SEARCH.FieldFormula.IScript_ClassSearch?institution=UVA01'
-    course = ('CS','4991') #example coures for now to test
-    response = requests.get(base_url + '&subject=' + course[0] + '&catalog_nbr=' + course[1])
+    response = requests.get(base_url + '&term=' + term + '&subject=' + subject + '&page=' + page)
     return response
-
-
-
-# response = get_courses()
-# print(response.json())
-
-#print(get_recent_terms())
-
-terms = get_recent_terms()
-print(get_mnemonics(terms[0]))
