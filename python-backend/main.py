@@ -80,9 +80,10 @@ def get_course_data(r, semester, existing_courses):
     course_type = r["component"]
 
     parent_course_id = None
-    if course_type not in {"LAB", "DIS"}:
+    if course_type in {"LAB", "DIS"}:
         key = (r["subject"], r["catalog_nbr"], semester)
         possible_lectures = existing_courses.get(key, [])
+        print(possible_lectures)
         if possible_lectures:
             parent_course_id = possible_lectures
 
@@ -144,16 +145,16 @@ INSERT_SQL = """
 INSERT INTO courses (
     department, subject, course_number, credits, instruction_mode,
     location, days, start_time, end_time, section, professors,
-    semester, attributes, type
+    semester, attributes, type, parent_course_id
 ) VALUES (
     %(department)s, %(subject)s, %(course_number)s, %(credits)s, %(instruction_mode)s,
     %(location)s, %(days)s, %(start_time)s, %(end_time)s, %(section)s, %(professors)s,
-    %(semester)s, %(attributes)s, %(type)s
+    %(semester)s, %(attributes)s, %(type)s, %(parent_course_id)s
 )RETURNING id;
 """
 
 
-recent_terms = get_recent_terms()
+recent_terms = ["1252"] #get_recent_terms()
 course_mmnemonics = ["CS"] #get_mnemonics()
 
 try:
