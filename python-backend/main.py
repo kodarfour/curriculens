@@ -154,7 +154,7 @@ INSERT INTO courses (
 """
 
 
-recent_terms = ["1252"] #get_recent_terms()
+recent_terms = get_recent_terms()
 course_mmnemonics = ["CS"] #get_mnemonics()
 
 try:
@@ -170,6 +170,9 @@ try:
                     r = get_courses(term, subject, str(1))
                     page_count = r["pageCount"]
                     for course in r["classes"]:
+                        if int(course["catalog_nbr"]) >= 5000:
+                            page_count = -1
+                            break
                         course_data = get_course_data(course, semester, existing_courses)
                         cursor.execute(INSERT_SQL, course_data)
                         inserted_id = cursor.fetchone()[0] 
@@ -181,11 +184,14 @@ try:
                         print(subject, course["catalog_nbr"], course["class_section"], semester, "inserted successfully into the 'courses' table!")
                     conn.commit()
 
-                    if page_count == 1:
+                    if page_count < 2:
                         continue
                     for page in range(2, page_count+1):
                         r = get_courses(term, subject, str(page))
                         for course in r["classes"]:
+                            if int(course["catalog_nbr"]) >= 5000:
+                                page_count = -1
+                                break
                             course_data = get_course_data(course, semester, existing_courses)
                             cursor.execute(INSERT_SQL, course_data)
                             inserted_id = cursor.fetchone()[0] 
@@ -196,6 +202,8 @@ try:
 
                             print(subject, course["catalog_nbr"], course["class_section"], semester, "inserted successfully into the 'courses' table!")
                         conn.commit()
+                        if page_count < 0:
+                            break
 
 
 
