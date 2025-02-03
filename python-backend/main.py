@@ -4,6 +4,16 @@ from datetime import datetime
 import psycopg
 from psycopg.types.json import Jsonb
 
+POSSIBLE_ATTRIBUTES = [
+    "ASUD-CSW", "ASUD-HP", "ASUD-LS", "ASUD-AIP", "ASUD-CMP", "ASUD-SES", "ASUD-SS",
+    "ASUW-WL", "ASUQ-QCD", "ASUR-R21C1", "ASUR-R21C2",
+    "NW", "SW", "HS", "HNS", "FL",
+    "NCLC-NOCOST", "NCLC-LOWCOST",
+    "CSAS", "CSSS", "SSAS", "AST", "ASA", "CSA", "CST", "SSA", "SST", "TA",
+    "CORE-CRITTHINK", "CORE-ORALCOMM", "CORE-QUANTITAT", "CORE-RESEARCH",
+    "CORE-SCIENTIFIC", "CORE-WRITTEN"
+]
+
 def get_recent_terms():
     now = datetime.now()
     month = int(now.strftime("%m"))
@@ -60,12 +70,27 @@ def get_courses(term, subject, page): # specific term, subject, and page
         print(f"JSON parsing error: {e}")
         return {"pageCount": 0, "classes": []}
 
-def get_course_data(r, semester):
+def get_attributes(crse_attr_value):
+    active_attributes = crse_attr_value.split(",") if crse_attr_value else []
+    attributes_jsonb = {attr: (attr in active_attributes) for attr in POSSIBLE_ATTRIBUTES}
+
+    return attributes_jsonb
+
+def get_course_data(r, semester, existing_courses):
+    course_type = r["component"]
+
+    parent_course_id = None
+    if course_type not in {"LAB", "DIS"}:
+        key = (r["subject"], r["catalog_nbr"], semester)
+        possible_lectures = existing_courses.get(key, [])
+        if possible_lectures:
+            parent_course_id = possible_lectures
+
     course_data = {
         "department": r["subject_descr"],
         "subject": r["subject"],
         "course_number": r["catalog_nbr"],
-        "credits": int(r["units"]),
+        "credits": int(r["units"][-1]), # gets the highest credit count if there is a range
         "instruction_mode": r["instruction_mode_descr"],
         "location": r["meetings"][0]["facility_descr"] if r.get("meetings") else None,
         "days": r["meetings"][0]["days"] if r.get("meetings") else None,
@@ -74,8 +99,9 @@ def get_course_data(r, semester):
         "section": r["class_section"],
         "professors": [instructor["name"] for instructor in r["instructors"]],
         "semester": semester,
-        "attributes": r["crse_attr_value"] if r.get("crse_attr_value") else None,
-        "type": r["component"],
+        "attributes": Jsonb(get_attributes(r.get("crse_attr_value"))),
+        "type": course_type,
+        "parent_course_id": parent_course_id
     }
     return course_data
 
@@ -106,8 +132,9 @@ CREATE TABLE IF NOT EXISTS courses (
     section VARCHAR(50),
     professors TEXT[],
     semester VARCHAR(50),
-    attributes VARCHAR(50),
+    attributes JSONB,
     type VARCHAR(50),
+    parent_course_id INTEGER[],
     UNIQUE (subject, course_number, section, semester)
 );
 """
@@ -122,7 +149,7 @@ INSERT INTO courses (
     %(department)s, %(subject)s, %(course_number)s, %(credits)s, %(instruction_mode)s,
     %(location)s, %(days)s, %(start_time)s, %(end_time)s, %(section)s, %(professors)s,
     %(semester)s, %(attributes)s, %(type)s
-);
+)RETURNING id;
 """
 
 
@@ -138,22 +165,35 @@ try:
             for term in recent_terms:
                 semester = term_to_semester_translator(term)
                 for subject in course_mmnemonics:
+                    existing_courses = {}
                     r = get_courses(term, subject, str(1))
                     page_count = r["pageCount"]
                     for course in r["classes"]:
-                        course_data = get_course_data(course, semester)
+                        course_data = get_course_data(course, semester, existing_courses)
                         cursor.execute(INSERT_SQL, course_data)
-                        conn.commit()
-                        print(semester, subject, "page 1 data inserted successfully into the 'courses' table!")
+                        inserted_id = cursor.fetchone()[0] 
+
+                        if course["component"] == "LEC":
+                            key = (course["subject"], course["catalog_nbr"], semester)
+                            existing_courses.setdefault(key, []).append(inserted_id)
+
+                        print(subject, course["catalog_nbr"], course["class_section"], semester, "inserted successfully into the 'courses' table!")
+                    conn.commit()
 
                     if page_count == 1:
                         continue
                     for page in range(2, page_count+1):
-                        response = get_courses(term, subject, str(page))
+                        r = get_courses(term, subject, str(page))
                         for course in r["classes"]:
-                            course_data = get_course_data(course, semester)
+                            course_data = get_course_data(course, semester, existing_courses)
                             cursor.execute(INSERT_SQL, course_data)
-                            print(semester, subject, "page", page, "data inserted successfully into the 'courses' table!")
+                            inserted_id = cursor.fetchone()[0] 
+
+                            if course["component"] == "LEC":
+                                key = (course["subject"], course["catalog_nbr"], semester)
+                                existing_courses.setdefault(key, []).append(inserted_id)
+
+                            print(subject, course["catalog_nbr"], course["class_section"], semester, "inserted successfully into the 'courses' table!")
                         conn.commit()
 
 
