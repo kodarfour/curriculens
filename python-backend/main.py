@@ -113,7 +113,7 @@ DB_CONFIG = {
     "dbname": "curriculens",
     "user": "myuser",
     "password": "mypassword",
-    "host": "localhost",
+    "host": "host.docker.internal",
     "port": 5432,
 }
 
