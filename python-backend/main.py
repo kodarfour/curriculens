@@ -114,7 +114,8 @@ DB_CONFIG = {
     "user": "myuser",
     "password": "mypassword",
     "host": "host.docker.internal",
-    "port": 5432,
+    "port": 6543,
+    "sslmode" : "disable",
 }
 
 # Base query to create the table
