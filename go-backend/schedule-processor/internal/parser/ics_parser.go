@@ -6,22 +6,19 @@ import (
 	"strconv"
 	"strings"
 
+	"go-backend/schedule-processor/internal/models"
+
 	ics "github.com/arran4/golang-ical"
 )
 
-type Course struct {
-	Subject      string
-	CourseNumber int
-}
-
-func ParseICS(filePath string) ([]Course, error) {
+func ParseICS(filePath string) ([]models.Course, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
 
-	var TakenCourses []Course
+	var TakenCourses []models.Course
 
 	calendar, err := ics.ParseCalendar(file)
 	if err != nil {
@@ -54,7 +51,7 @@ func ParseICS(filePath string) ([]Course, error) {
 			continue
 		}
 
-		CurrentCourse := Course{Subject: subject, CourseNumber: courseNumber}
+		CurrentCourse := models.Course{Subject: subject, CourseNumber: courseNumber}
 		TakenCourses = append(TakenCourses, CurrentCourse)
 
 		fmt.Printf("Added Course: %s %d\n", subject, courseNumber)

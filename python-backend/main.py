@@ -82,8 +82,7 @@ def get_course_data(r, semester, existing_courses):
     parent_course_id = None
     if course_type in {"LAB", "DIS"}:
         key = (r["subject"], r["catalog_nbr"], semester)
-        possible_lectures = existing_courses.get(key, [])
-        print(possible_lectures)
+        possible_lectures = existing_courses.get(key, {}).get("lecture_ids", [])
         if possible_lectures:
             parent_course_id = possible_lectures
 
@@ -102,7 +101,8 @@ def get_course_data(r, semester, existing_courses):
         "semester": semester,
         "attributes": Jsonb(get_attributes(r.get("crse_attr_value"))),
         "type": course_type,
-        "parent_course_id": parent_course_id
+        "parent_course_id": parent_course_id,
+        "has_lab_or_dis": False
     }
     return course_data
 
@@ -136,6 +136,7 @@ CREATE TABLE IF NOT EXISTS courses (
     attributes JSONB,
     type VARCHAR(50),
     parent_course_id INTEGER[],
+    has_lab_or_dis BOOLEAN DEFAULT FALSE,
     UNIQUE (subject, course_number, section, semester)
 );
 """
@@ -145,11 +146,11 @@ INSERT_SQL = """
 INSERT INTO courses (
     department, subject, course_number, credits, instruction_mode,
     location, days, start_time, end_time, section, professors,
-    semester, attributes, type, parent_course_id
+    semester, attributes, type, parent_course_id, has_lab_or_dis
 ) VALUES (
     %(department)s, %(subject)s, %(course_number)s, %(credits)s, %(instruction_mode)s,
     %(location)s, %(days)s, %(start_time)s, %(end_time)s, %(section)s, %(professors)s,
-    %(semester)s, %(attributes)s, %(type)s, %(parent_course_id)s
+    %(semester)s, %(attributes)s, %(type)s, %(parent_course_id)s, %(has_lab_or_dis)s
 )RETURNING id;
 """
 
@@ -179,7 +180,15 @@ try:
 
                         if course["component"] == "LEC":
                             key = (course["subject"], course["catalog_nbr"], semester)
-                            existing_courses.setdefault(key, []).append(inserted_id)
+                            if key not in existing_courses:
+                                existing_courses[key] = {"lecture_ids": [], "has_lab_or_dis": False}
+                            existing_courses[key]["lecture_ids"].append(inserted_id)
+
+                        # Track if a lab/discussion exists for a lecture
+                        elif course["component"] in {"LAB", "DIS"}:
+                            key = (course["subject"], course["catalog_nbr"], semester)
+                            if key in existing_courses:
+                                existing_courses[key]["has_lab_or_dis"] = True
 
                         print(subject, course["catalog_nbr"], course["class_section"], semester, "inserted successfully into the 'courses' table!")
                     conn.commit()
@@ -198,12 +207,25 @@ try:
 
                             if course["component"] == "LEC":
                                 key = (course["subject"], course["catalog_nbr"], semester)
-                                existing_courses.setdefault(key, []).append(inserted_id)
+                                if key not in existing_courses:
+                                    existing_courses[key] = {"lecture_ids": [], "has_lab_or_dis": False}
+                                existing_courses[key]["lecture_ids"].append(inserted_id)
+
+                            elif course["component"] in {"LAB", "DIS"}:
+                                key = (course["subject"], course["catalog_nbr"], semester)
+                                if key in existing_courses:
+                                    existing_courses[key]["has_lab_or_dis"] = True
 
                             print(subject, course["catalog_nbr"], course["class_section"], semester, "inserted successfully into the 'courses' table!")
                         conn.commit()
                         if page_count < 0:
                             break
+                        
+                    for key, data in existing_courses.items():
+                        if data["has_lab_or_dis"]:  # check if lecture has a LAB/DIS
+                            for lecture_id in data["lecture_ids"]:  # extract individual lecture IDs
+                                cursor.execute("UPDATE courses SET has_lab_or_dis = TRUE WHERE id = %s;", (lecture_id,))  
+                    conn.commit()
 
 
 
