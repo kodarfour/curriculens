@@ -1,8 +1,13 @@
 import requests
 from datetime import datetime
+import os
 
 import psycopg
 from psycopg.types.json import Jsonb
+from dotenv import load_dotenv
+
+
+load_dotenv()
 
 POSSIBLE_ATTRIBUTES = [
     "ASUD-CSW", "ASUD-HP", "ASUD-LS", "ASUD-AIP", "ASUD-CMP", "ASUD-SES", "ASUD-SS",
@@ -110,11 +115,11 @@ def get_course_data(r, semester, existing_courses):
 
 # Config for local PostgreSQL database
 DB_CONFIG = {
-    "dbname": "curriculens",
-    "user": "myuser",
-    "password": "mypassword",
-    "host": "host.docker.internal",
-    "port": 5432,
+    "dbname": os.getenv("POSTGRES_DB"),
+    "user": os.getenv("POSTGRES_USER"),
+    "password": os.getenv("POSTGRES_PASSWORD"),
+    "host": os.getenv("POSTGRES_HOST"),
+    "port": os.getenv("POSTGRES_PORT"),
 }
 
 # Base query to create the table
