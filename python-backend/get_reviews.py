@@ -1,0 +1,1 @@
+# Going to use Selenium here since BeautifulSoup doesn't handle dynamic pages well
